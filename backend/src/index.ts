@@ -4,6 +4,8 @@ import Moralis from "moralis";
 
 const app = express();
 
+const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
+
 app.get("/getnftdata", async (req, res) => {
   try {
     const { query } = req;
@@ -39,6 +41,44 @@ app.get("/getnftdata", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+app.get("/getcontractnft", async (req, res) => {
+  try {
+    const { query } = req;
+    const chain = query.chain == "0x5" ? "0x5" : "0x1";
+
+    const response = await Moralis.EvmApi.nft.getContractNFTs({
+      chain,
+      format: "decimal",
+      address: query?.contractAddress as string,
+    });
+
+    return res.status(200).json(response);
+  } catch (e) {
+    console.log(`Something went wrong ${e}`);
+    return res.status(400).json();
+  }
+});
+
+app.get("/getnfts", async (req, res) => {
+  try {
+    const { query } = req;
+
+    const response = await Moralis.EvmApi.nft.getWalletNFTs({
+      address: query?.address as string,
+      chain: query.chain as string,
+    });
+
+    return res.status(200).json(response);
+  } catch (e) {
+    console.log(`Something went wrong ${e}`);
+    return res.status(400).json();
+  }
+});
+
+Moralis.start({
+  apiKey: MORALIS_API_KEY,
+}).then(() => {
+  app.listen(3000, () => {
+    console.log(`Listening for API calls`);
+  });
 });
